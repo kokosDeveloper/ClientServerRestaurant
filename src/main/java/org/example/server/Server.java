@@ -10,6 +10,7 @@ public class Server {
             System.out.println("Сервер запущен");
             while(true){
                 new Thread(new ClientHandler(serverSocket.accept())).start();
+                System.out.println("Клиент подключился");
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

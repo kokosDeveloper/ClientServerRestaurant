@@ -8,7 +8,7 @@ import org.example.commands.OrderCommand;
 @NoArgsConstructor
 @Data
 public class PizzaCommand implements OrderCommand {
-    private int size;
+    private String size;
     @Override
     public void execute() {
         System.out.println("Pizza made, size: " + size);

@@ -1,7 +1,10 @@
 package org.example.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.commands.CommandRegister;
 import org.example.commands.OrderCommand;
+import org.example.commands.factories.implementations.PizzaCommandFactory;
+import org.example.commands.factories.implementations.WokCommandFactory;
 import org.example.commands.implementations.PizzaCommand;
 import org.example.commands.implementations.WokCommand;
 
@@ -14,6 +17,8 @@ public class Customer {
     private static final String IP_ADDRESS = "127.0.0.1";
     private static final int PORT = 8083;
     private static ObjectMapper objectMapper = new ObjectMapper();
+    private static CommandRegister commandRegister = new CommandRegister();
+
 
     public static void main(String[] args) {
         try (Socket clientSocket = new Socket(IP_ADDRESS, PORT);
@@ -22,24 +27,15 @@ public class Customer {
              PrintWriter writerToConsole = new PrintWriter(System.out, true);
              PrintWriter writerToServer = new PrintWriter(clientSocket.getOutputStream(), true)) {
             String input;
+            commandRegister.registerCommandFactory("пицца", new PizzaCommandFactory(readerFromConsole, writerToConsole));
+            commandRegister.registerCommandFactory("вок", new WokCommandFactory(readerFromConsole, writerToConsole));
             while(true){
                 writerToConsole.println("Введите заказ: ");
                 input = readerFromConsole.readLine();
                 if(input.equals("выход"))
                     break;
                 OrderCommand order = null;
-                switch(input){
-                    case "пицца":
-                        writerToConsole.println("Введите размер: ");
-                        int size = Integer.parseInt(readerFromConsole.readLine());
-                        order = new PizzaCommand(size);
-                        break;
-                    case "вок":
-                        writerToConsole.println("Введите остроту: ");
-                        String spicy = readerFromConsole.readLine();
-                        order = new WokCommand(spicy);
-                        break;
-                }
+                order = commandRegister.getCommand(input);
                 if (order != null) {
                     String orderJson = objectMapper.writeValueAsString(order);
                     writerToServer.println(orderJson);
