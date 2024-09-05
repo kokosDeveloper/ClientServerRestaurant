@@ -1,12 +1,14 @@
 package org.example.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import org.example.commands.CommandRegister;
 import org.example.commands.OrderCommand;
 import org.example.commands.factories.implementations.PizzaCommandFactory;
 import org.example.commands.factories.implementations.WokCommandFactory;
 import org.example.commands.implementations.PizzaCommand;
 import org.example.commands.implementations.WokCommand;
+import org.example.dishes.Dish;
 
 import java.io.*;
 import java.net.Socket;
@@ -18,6 +20,11 @@ public class Customer {
     private static final int PORT = 8083;
     private static ObjectMapper objectMapper = new ObjectMapper();
     private static CommandRegister commandRegister = new CommandRegister();
+    private static void configureObjectMapperForDishes(){
+        objectMapper.activateDefaultTyping(BasicPolymorphicTypeValidator.builder().allowIfSubType(Dish.class).build(),
+                ObjectMapper.DefaultTyping.NON_FINAL);
+    }
+
 
 
     public static void main(String[] args) {
@@ -29,6 +36,7 @@ public class Customer {
             String input;
             commandRegister.registerCommandFactory("пицца", new PizzaCommandFactory(readerFromConsole, writerToConsole));
             commandRegister.registerCommandFactory("вок", new WokCommandFactory(readerFromConsole, writerToConsole));
+            configureObjectMapperForDishes();
             while(true){
                 writerToConsole.println("Введите заказ: ");
                 input = readerFromConsole.readLine();
@@ -40,9 +48,17 @@ public class Customer {
                     String orderJson = objectMapper.writeValueAsString(order);
                     writerToServer.println(orderJson);
                     writerToConsole.println("Заказ отправлен: " + orderJson);
+                    String dishJson = readerFromServer.readLine();
+                    if(dishJson != null && !dishJson.isEmpty()){
+                        Dish dish = objectMapper.readValue(dishJson, Dish.class);
+                        writerToConsole.println("Получено блюдо: " + dish.toString());
+                    }else{
+                        writerToConsole.println("Не удалось получить блюдо");
+                    }
                 }else {
                     writerToConsole.println("Нераспознанный заказ");
                 }
+
             }
 
         } catch (UnknownHostException e) {

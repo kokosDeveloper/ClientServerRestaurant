@@ -1,16 +1,24 @@
 package org.example.commands.implementations;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.commands.OrderCommand;
-@AllArgsConstructor
-@NoArgsConstructor
+import org.example.dishes.Dish;
+import org.example.kitchen.Chef;
+
+
+
 @Data
+@NoArgsConstructor
 public class PizzaCommand implements OrderCommand {
     private String size;
+    private Chef chef;
+
+    public PizzaCommand(String size) {
+        this.size = size;
+    }
+
     @Override
-    public void execute() {
-        System.out.println("Pizza made, size: " + size);
+    public Dish execute() {
+        return (Dish) chef.cookPizza(size);
     }
 }
